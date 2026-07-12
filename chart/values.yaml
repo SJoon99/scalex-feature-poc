@@ -1,0 +1,108 @@
+nameOverride: ""
+fullnameOverride: ""
+
+releaseLabel: rgw-analysis-web
+
+s3:
+  endpointUrl: "https://s3.example.invalid"
+  bucket: "rgw-analysis-poc"
+  region: "us-east-1"
+  secretName: "rgw-analysis-web-s3"
+  inputKey: "input/dataset.csv"
+  resultPrefix: "results/rgw-analysis-web"
+  resultJsonKey: "results/rgw-analysis-web/result.json"
+  resultIndexKey: "results/rgw-analysis-web/index.html"
+  waitSeconds: 120
+  pollIntervalSeconds: 5
+  syncIntervalSeconds: 30
+
+images:
+  awsCli:
+    repository: public.ecr.aws/aws-cli/aws-cli
+    tag: "2.17.57"
+    pullPolicy: IfNotPresent
+  nginx:
+    repository: nginx
+    tag: "1.27.3-alpine"
+    pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+awsCliSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+nginxSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  runAsGroup: 101
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  datasetSeeder:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  analyzer:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  resultSync:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  nginx:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+jobs:
+  datasetSeeder:
+    backoffLimit: 2
+    ttlSecondsAfterFinished: null
+  analyzer:
+    backoffLimit: 2
+    ttlSecondsAfterFinished: null
+
+resultWeb:
+  replicas: 1
+  service:
+    type: ClusterIP
+    annotations:
+      scalex.io/exposure: internal
+    port: 80
+    targetPort: 8080
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

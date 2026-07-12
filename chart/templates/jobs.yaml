@@ -1,0 +1,117 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "rgw-analysis-web.fullname" . }}-dataset-seeder
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
+  labels:
+{{ include "rgw-analysis-web.componentLabels" (dict "root" . "component" "dataset-seeder") | indent 4 }}
+spec:
+  backoffLimit: {{ .Values.jobs.datasetSeeder.backoffLimit }}
+{{- with .Values.jobs.datasetSeeder.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ .Values.jobs.datasetSeeder.ttlSecondsAfterFinished }}
+{{- end }}
+  template:
+    metadata:
+      labels:
+{{ include "rgw-analysis-web.componentLabels" (dict "root" . "component" "dataset-seeder") | indent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "rgw-analysis-web.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+{{ toYaml .Values.podSecurityContext | indent 8 }}
+      containers:
+        - name: dataset-seeder
+          image: "{{ .Values.images.awsCli.repository }}:{{ .Values.images.awsCli.tag }}"
+          imagePullPolicy: {{ .Values.images.awsCli.pullPolicy }}
+          command: ["/bin/sh", "/scripts/dataset-seeder.sh"]
+          env:
+{{ include "rgw-analysis-web.awsEnv" . | indent 12 }}
+            - name: S3_INPUT_KEY
+              value: {{ .Values.s3.inputKey | quote }}
+          securityContext:
+{{ toYaml .Values.awsCliSecurityContext | indent 12 }}
+          resources:
+{{ toYaml .Values.resources.datasetSeeder | indent 12 }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: work
+              mountPath: /work
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "rgw-analysis-web.fullname" . }}-scripts
+            defaultMode: 0555
+        - name: work
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+{{ include "rgw-analysis-web.nodeScheduling" . | indent 6 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "rgw-analysis-web.fullname" . }}-analyzer
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
+  labels:
+{{ include "rgw-analysis-web.componentLabels" (dict "root" . "component" "analyzer") | indent 4 }}
+spec:
+  backoffLimit: {{ .Values.jobs.analyzer.backoffLimit }}
+{{- with .Values.jobs.analyzer.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ .Values.jobs.analyzer.ttlSecondsAfterFinished }}
+{{- end }}
+  template:
+    metadata:
+      labels:
+{{ include "rgw-analysis-web.componentLabels" (dict "root" . "component" "analyzer") | indent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "rgw-analysis-web.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+{{ toYaml .Values.podSecurityContext | indent 8 }}
+      containers:
+        - name: analyzer
+          image: "{{ .Values.images.awsCli.repository }}:{{ .Values.images.awsCli.tag }}"
+          imagePullPolicy: {{ .Values.images.awsCli.pullPolicy }}
+          command: ["/bin/sh", "/scripts/analyzer.sh"]
+          env:
+{{ include "rgw-analysis-web.awsEnv" . | indent 12 }}
+            - name: S3_INPUT_KEY
+              value: {{ .Values.s3.inputKey | quote }}
+            - name: S3_RESULT_JSON_KEY
+              value: {{ .Values.s3.resultJsonKey | quote }}
+            - name: S3_RESULT_INDEX_KEY
+              value: {{ .Values.s3.resultIndexKey | quote }}
+            - name: S3_WAIT_SECONDS
+              value: {{ .Values.s3.waitSeconds | quote }}
+            - name: S3_POLL_INTERVAL_SECONDS
+              value: {{ .Values.s3.pollIntervalSeconds | quote }}
+          securityContext:
+{{ toYaml .Values.awsCliSecurityContext | indent 12 }}
+          resources:
+{{ toYaml .Values.resources.analyzer | indent 12 }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: work
+              mountPath: /work
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "rgw-analysis-web.fullname" . }}-scripts
+            defaultMode: 0555
+        - name: work
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+{{ include "rgw-analysis-web.nodeScheduling" . | indent 6 }}

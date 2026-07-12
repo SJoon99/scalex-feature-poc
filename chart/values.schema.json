@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["s3", "images", "resources", "resultWeb"],
+  "properties": {
+    "releaseLabel": { "type": "string", "minLength": 1 },
+    "s3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["endpointUrl", "bucket", "region", "secretName", "inputKey", "resultPrefix", "resultJsonKey", "resultIndexKey"],
+      "properties": {
+        "endpointUrl": { "type": "string", "minLength": 1 },
+        "bucket": { "type": "string", "minLength": 1 },
+        "region": { "type": "string", "minLength": 1 },
+        "secretName": { "type": "string", "minLength": 1 },
+        "inputKey": { "type": "string", "minLength": 1 },
+        "resultPrefix": { "type": "string", "minLength": 1 },
+        "resultJsonKey": { "type": "string", "minLength": 1 },
+        "resultIndexKey": { "type": "string", "minLength": 1 },
+        "waitSeconds": { "type": "integer", "minimum": 1 },
+        "pollIntervalSeconds": { "type": "integer", "minimum": 1 },
+        "syncIntervalSeconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "images": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["awsCli", "nginx"],
+      "properties": {
+        "awsCli": { "$ref": "#/definitions/image" },
+        "nginx": { "$ref": "#/definitions/image" }
+      }
+    },
+    "resultWeb": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "replicas": { "type": "integer", "minimum": 1 },
+        "service": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+            "annotations": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": { "type": "string" }
+            },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+            "targetPort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "tag", "pullPolicy"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1, "not": { "enum": ["latest"] } },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      }
+    }
+  }
+}

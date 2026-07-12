@@ -1,0 +1,13 @@
+apiVersion: v2
+name: rgw-analysis-web
+description: Cluster-neutral ScaleX POC chart for seeding, analyzing, and serving RGW/S3 results.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - scalex
+  - rgw
+  - s3
+  - analysis
+maintainers:
+  - name: ScaleX

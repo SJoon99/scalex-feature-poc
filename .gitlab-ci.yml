@@ -1,0 +1,31 @@
+stages:
+  - test
+  - lint
+  - package
+
+variables:
+  HELM_EXPERIMENTAL_OCI: "1"
+
+default:
+  image: alpine/helm:3.15.4
+  before_script:
+    - apk add --no-cache bash coreutils grep
+
+test:scripts:
+  stage: test
+  script:
+    - ./tests/test-runtime-scripts.sh
+
+lint:helm:
+  stage: lint
+  script:
+    - ./scripts/validate-chart.sh
+
+package:chart:
+  stage: package
+  script:
+    - ./scripts/package-chart.sh
+  artifacts:
+    paths:
+      - dist/*.tgz
+    expire_in: 7 days
