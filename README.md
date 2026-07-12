@@ -82,5 +82,5 @@ scalex-federation
 - Chart는 Karmada placement policy를 소유하지 않는다.
 - Federation이 선택할 수 있도록 일관된 workload/component label을 제공한다.
 - Base `result-web` Service는 `ClusterIP`이며 non-empty `metadata.annotations` map을 가진다.
-- Image와 chart는 version 또는 digest로 식별 가능해야 한다.
+- Runtime image는 tag와 immutable digest를 함께 고정한다.
 - Secret 값은 source, image, chart에 포함하지 않는다.

@@ -23,7 +23,7 @@ spec:
 {{ toYaml .Values.podSecurityContext | indent 8 }}
       containers:
         - name: result-sync
-          image: "{{ .Values.images.awsCli.repository }}:{{ .Values.images.awsCli.tag }}"
+          image: {{ include "rgw-analysis-web.image" .Values.images.awsCli | quote }}
           imagePullPolicy: {{ .Values.images.awsCli.pullPolicy }}
           command: ["/bin/sh", "/scripts/result-sync.sh"]
           env:
@@ -47,7 +47,7 @@ spec:
             - name: tmp
               mountPath: /tmp
         - name: nginx
-          image: "{{ .Values.images.nginx.repository }}:{{ .Values.images.nginx.tag }}"
+          image: {{ include "rgw-analysis-web.image" .Values.images.nginx | quote }}
           imagePullPolicy: {{ .Values.images.nginx.pullPolicy }}
           ports:
             - name: http

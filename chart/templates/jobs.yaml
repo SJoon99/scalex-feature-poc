@@ -23,7 +23,7 @@ spec:
 {{ toYaml .Values.podSecurityContext | indent 8 }}
       containers:
         - name: dataset-seeder
-          image: "{{ .Values.images.awsCli.repository }}:{{ .Values.images.awsCli.tag }}"
+          image: {{ include "rgw-analysis-web.image" .Values.images.awsCli | quote }}
           imagePullPolicy: {{ .Values.images.awsCli.pullPolicy }}
           command: ["/bin/sh", "/scripts/dataset-seeder.sh"]
           env:
@@ -78,7 +78,7 @@ spec:
 {{ toYaml .Values.podSecurityContext | indent 8 }}
       containers:
         - name: analyzer
-          image: "{{ .Values.images.awsCli.repository }}:{{ .Values.images.awsCli.tag }}"
+          image: {{ include "rgw-analysis-web.image" .Values.images.awsCli | quote }}
           imagePullPolicy: {{ .Values.images.awsCli.pullPolicy }}
           command: ["/bin/sh", "/scripts/analyzer.sh"]
           env:

@@ -27,6 +27,10 @@
 {{- end -}}
 {{- end -}}
 
+{{- define "rgw-analysis-web.image" -}}
+{{- printf "%s:%s" .repository .tag -}}{{- with .digest -}}@{{ . }}{{- end -}}
+{{- end -}}
+
 {{- define "rgw-analysis-web.commonLabels" -}}
 helm.sh/chart: {{ include "rgw-analysis-web.chart" . }}
 app.kubernetes.io/name: {{ include "rgw-analysis-web.name" . }}

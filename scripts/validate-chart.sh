@@ -47,6 +47,11 @@ grep -q 'scalex.io/exposure: internal' "${RENDERED}" || {
   exit 1
 }
 
+if grep -E '^[[:space:]]*image:' "${RENDERED}" | grep -vq '@sha256:'; then
+  echo "all runtime images must be pinned by digest" >&2
+  exit 1
+fi
+
 if grep -Eiq 'karmada|propagationpolicy|overridepolicy|clusterName:|memberCluster|cluster-b|cluster-c' "${RENDERED}" "${CHART_DIR}"/*.yaml "${CHART_DIR}"/templates/*.yaml; then
   echo "chart contains cluster-specific or Karmada policy content" >&2
   exit 1
