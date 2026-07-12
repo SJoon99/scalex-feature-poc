@@ -11,7 +11,7 @@ SYNC_INTERVAL_SECONDS="${S3_SYNC_INTERVAL_SECONDS:-30}"
 mkdir -p "${HTML_DIR}"
 
 while true; do
-  aws --endpoint-url "${S3_ENDPOINT_URL}" s3 sync "s3://${S3_BUCKET}/${S3_RESULT_PREFIX}" "${HTML_DIR}" --delete || true
+  aws --endpoint-url "${S3_ENDPOINT_URL}" s3 sync "s3://${S3_BUCKET}/${S3_RESULT_PREFIX}" "${HTML_DIR}" --delete
   if [ ! -f "${HTML_DIR}/index.html" ]; then
     cat > "${HTML_DIR}/index.html" <<'HTML'
 <!doctype html>
