@@ -4,10 +4,19 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CHART_DIR="${ROOT_DIR}/chart"
 RENDERED="$(mktemp)"
-trap 'rm -f "${RENDERED}"' EXIT
+OBC_RENDERED="$(mktemp)"
+trap 'rm -f "${RENDERED}" "${OBC_RENDERED}"' EXIT
 
 helm lint "${CHART_DIR}"
 helm template rgw-analysis-web "${CHART_DIR}" > "${RENDERED}"
+helm template rgw-analysis-web "${CHART_DIR}" \
+  --namespace scalex-rgw-analysis-web \
+  --set objectStorage.claim.enabled=true \
+  --set objectStorage.claim.name=rgw-analysis-web-bucket \
+  --set objectStorage.claim.bucketName=rgw-analysis-web-poc \
+  --set objectStorage.claim.generateBucketName= \
+  --set objectStorage.claim.storageClassName=ceph-bucket \
+  > "${OBC_RENDERED}"
 
 
 expected_names=(
@@ -56,5 +65,18 @@ if grep -Eiq 'karmada|propagationpolicy|overridepolicy|clusterName:|memberCluste
   echo "chart contains cluster-specific or Karmada policy content" >&2
   exit 1
 fi
+
+yq -e '
+  select(.apiVersion == "objectbucket.io/v1alpha1" and .kind == "ObjectBucketClaim") |
+  .metadata.name == "rgw-analysis-web-bucket" and
+  .metadata.namespace == "scalex-rgw-analysis-web" and
+  .metadata.labels."scalex.io/release" == "rgw-analysis-web" and
+  .metadata.labels."scalex.io/component" == "object-storage-claim" and
+  .spec.bucketName == "rgw-analysis-web-poc" and
+  .spec.storageClassName == "ceph-bucket"
+' "${OBC_RENDERED}" >/dev/null || {
+  echo "feature-owned ObjectBucketClaim contract is not rendered" >&2
+  exit 1
+}
 
 echo "chart validation passed"

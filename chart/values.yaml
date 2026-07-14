@@ -3,6 +3,14 @@ fullnameOverride: ""
 
 releaseLabel: rgw-analysis-web
 
+objectStorage:
+  claim:
+    enabled: false
+    name: rgw-analysis-web-bucket
+    bucketName: ""
+    generateBucketName: rgw-analysis-web-
+    storageClassName: object-bucket
+
 s3:
   endpointUrl: "https://s3.example.invalid"
   bucket: "rgw-analysis-poc"

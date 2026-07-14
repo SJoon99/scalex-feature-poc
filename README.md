@@ -14,6 +14,7 @@ ScaleX User/Dev Layer에서 사용할 feature를 개발하고 배포 artifact로
 2. `analyzer` Kubernetes Job — input object를 기다린 뒤 row count/sum/average를 계산하고 `result.json`, `index.html`을 업로드한다.
 3. `result-web` Deployment — AWS CLI sync sidecar가 result prefix를 nginx html dir로 polling sync하고 nginx가 정적 결과를 제공한다.
 4. `result-web` Service — base type은 `ClusterIP`; Federation override가 필요한 cluster에서만 LoadBalancer로 바꾼다.
+5. Optional `ObjectBucketClaim` — 기능 namespace에서 전용 bucket과 runtime credential을 요청한다.
 
 공식 public runtime image만 사용한다.
 
@@ -39,6 +40,18 @@ member cluster별 endpoint를 안전하게 override할 수 있다.
 - Tower Argo bootstrap
 - Cluster Infra 구성
 - 운영 credential 보관
+
+## Object storage contract
+
+Feature Helm은 선택적으로 namespaced `ObjectBucketClaim`을 선언하고, workload가
+사용할 Secret 이름을 참조한다. 실제 `CephObjectStore`, bucket `StorageClass`,
+RGW endpoint는 각 `*-k8s` Infra가 제공하며, OBC placement는 Federation이
+Karmada policy로 결정한다.
+
+Rook이 생성하는 access/secret key 값은 chart나 Git에 저장하지 않는다. 같은
+클러스터의 workload는 OBC Secret을 직접 사용할 수 있고, 다른 클러스터가 같은
+bucket을 사용해야 할 때는 Tower credential bridge 또는 중앙 Secret Store가
+해당 값을 전달한다.
 
 ## 기본 흐름
 

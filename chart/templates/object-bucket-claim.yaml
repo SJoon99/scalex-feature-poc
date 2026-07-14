@@ -1,0 +1,25 @@
+{{- $claim := .Values.objectStorage.claim -}}
+{{- if $claim.enabled }}
+{{- $bucketName := $claim.bucketName | default "" | trim -}}
+{{- $generateBucketName := $claim.generateBucketName | default "" | trim -}}
+{{- if and $bucketName $generateBucketName -}}
+{{- fail "objectStorage.claim must set only one of bucketName or generateBucketName" -}}
+{{- end -}}
+{{- if and (not $bucketName) (not $generateBucketName) -}}
+{{- fail "objectStorage.claim requires bucketName or generateBucketName" -}}
+{{- end }}
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: {{ required "objectStorage.claim.name is required" $claim.name | quote }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+{{ include "rgw-analysis-web.componentLabels" (dict "root" . "component" "object-storage-claim") | indent 4 }}
+spec:
+{{- if $bucketName }}
+  bucketName: {{ $bucketName | quote }}
+{{- else }}
+  generateBucketName: {{ $generateBucketName | quote }}
+{{- end }}
+  storageClassName: {{ required "objectStorage.claim.storageClassName is required" $claim.storageClassName | quote }}
+{{- end }}

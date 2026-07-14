@@ -12,12 +12,22 @@ It creates:
 - `result-web` `Service`, base type `ClusterIP`.
 - ConfigMaps `rgw-analysis-web-scripts` and `rgw-analysis-web-runtime` for shell scripts and nginx config.
 - ServiceAccount with token automount disabled.
+- Optional namespaced `ObjectBucketClaim` for an application-owned bucket.
 
 The chart intentionally does **not** contain member cluster names, Karmada `PropagationPolicy`, Karmada `OverridePolicy`, or credentials.
 
-## Required Secret
+## ObjectBucketClaim and required Secret
 
-Create the configured Secret outside this chart. It must contain:
+When `objectStorage.claim.enabled=true`, the chart declares an OBC in the Helm
+release namespace. The target cluster's Rook provisioner creates the bucket and
+its generated Secret/ConfigMap. The chart never renders access-key values.
+
+For same-cluster consumption, `s3.secretName` may reference the generated OBC
+Secret directly. A cross-cluster release must mirror that generated credential
+through a platform credential bridge or external Secret store before workloads
+in another member cluster can start.
+
+The configured runtime Secret must contain:
 
 ```yaml
 apiVersion: v1
@@ -36,6 +46,11 @@ The Secret name is configurable through `s3.secretName`.
 
 | Value | Purpose |
 |---|---|
+| `objectStorage.claim.enabled` | Render a feature-owned namespaced OBC. |
+| `objectStorage.claim.name` | OBC name; Rook uses it for generated Secret/ConfigMap names. |
+| `objectStorage.claim.bucketName` | Explicit bucket name when the release requires a stable cross-cluster contract. |
+| `objectStorage.claim.generateBucketName` | Prefix for a generated bucket name; mutually exclusive with `bucketName`. |
+| `objectStorage.claim.storageClassName` | Infra-provided object bucket StorageClass. |
 | `s3.endpointUrl` | S3/RGW endpoint URL used with `aws --endpoint-url`. |
 | `s3.bucket` | Bucket containing input and output objects. |
 | `s3.secretName` | Existing Secret consumed by Jobs and sync sidecar. |
