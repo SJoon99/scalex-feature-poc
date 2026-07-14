@@ -8,7 +8,7 @@ objectStorage:
     enabled: false
     name: rgw-analysis-web-bucket
     bucketName: ""
-    generateBucketName: rgw-analysis-web-
+    generateBucketName: ""
     storageClassName: object-bucket
 
 s3:

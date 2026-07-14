@@ -14,7 +14,6 @@ helm template rgw-analysis-web "${CHART_DIR}" \
   --set objectStorage.claim.enabled=true \
   --set objectStorage.claim.name=rgw-analysis-web-bucket \
   --set objectStorage.claim.bucketName=rgw-analysis-web-poc \
-  --set objectStorage.claim.generateBucketName= \
   --set objectStorage.claim.storageClassName=ceph-bucket \
   > "${OBC_RENDERED}"
 
