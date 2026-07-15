@@ -14,7 +14,7 @@ ScaleX User/Dev Layer에서 사용할 feature를 개발하고 배포 artifact로
 2. `analyzer` Kubernetes Job — input object를 기다린 뒤 row count/sum/average를 계산하고 `result.json`, `index.html`을 업로드한다.
 3. `result-web` Deployment — AWS CLI sync sidecar가 result prefix를 nginx html dir로 polling sync하고 nginx가 정적 결과를 제공한다.
 4. `result-web` Service — base type은 `ClusterIP`; Federation override가 필요한 cluster에서만 LoadBalancer로 바꾼다.
-5. Optional `ObjectBucketClaim` — 기능 namespace에서 전용 bucket과 runtime credential을 요청한다.
+5. 기존 runtime Secret/ConfigMap 참조 — Bucket 연결 정보는 Federation이 준비한다.
 
 공식 public runtime image만 사용한다.
 
@@ -43,15 +43,24 @@ member cluster별 endpoint를 안전하게 override할 수 있다.
 
 ## Object storage contract
 
-Feature Helm은 선택적으로 namespaced `ObjectBucketClaim`을 선언하고, workload가
-사용할 Secret 이름을 참조한다. 실제 `CephObjectStore`, bucket `StorageClass`,
-RGW endpoint는 각 `*-k8s` Infra가 제공하며, OBC placement는 Federation이
-Karmada policy로 결정한다.
+Feature Helm은 Bucket을 만들지 않는다. `ObjectBucketClaim`, StorageClass 선택,
+Bucket lifecycle과 Karmada placement는 `scalex-federation` release가 소유한다.
+Chart는 정규화된 두 리소스의 **이름만** 입력받는다.
 
-Rook이 생성하는 access/secret key 값은 chart나 Git에 저장하지 않는다. 같은
-클러스터의 workload는 OBC Secret을 직접 사용할 수 있고, 다른 클러스터가 같은
-bucket을 사용해야 할 때는 Tower credential bridge 또는 중앙 Secret Store가
-해당 값을 전달한다.
+```text
+Secret/<s3.secretName>
+├─ AWS_ACCESS_KEY_ID
+└─ AWS_SECRET_ACCESS_KEY
+
+ConfigMap/<s3.configMapName>
+├─ S3_ENDPOINT_URL
+├─ S3_BUCKET
+└─ AWS_DEFAULT_REGION
+```
+
+이 분리는 standalone Helm renderer가 member cluster credential이나 runtime
+provisioning 결과를 읽지 못하도록 하고, 동일 Chart가 단일·멀티클러스터에서
+같은 소비 계약을 사용하게 한다.
 
 ## 기본 흐름
 
@@ -93,6 +102,8 @@ scalex-federation
 
 - Chart는 특정 cluster 이름을 포함하지 않는다.
 - Chart는 Karmada placement policy를 소유하지 않는다.
+- Chart는 OBC, StorageClass, Secret과 runtime binding ConfigMap을 생성하지 않는다.
+- Chart는 `s3.secretName`과 `s3.configMapName`으로 기존 연결 정보만 소비한다.
 - Federation이 선택할 수 있도록 일관된 workload/component label을 제공한다.
 - Base `result-web` Service는 `ClusterIP`이며 non-empty `metadata.annotations` map을 가진다.
 - Runtime image는 tag와 immutable digest를 함께 고정한다.

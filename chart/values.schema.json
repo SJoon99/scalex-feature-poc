@@ -2,36 +2,15 @@
   "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": true,
-  "required": ["objectStorage", "s3", "images", "resources", "resultWeb"],
+  "required": ["s3", "images", "resources", "resultWeb"],
   "properties": {
     "releaseLabel": { "type": "string", "minLength": 1 },
-    "objectStorage": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["claim"],
-      "properties": {
-        "claim": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["enabled", "name", "bucketName", "generateBucketName", "storageClassName"],
-          "properties": {
-            "enabled": { "type": "boolean" },
-            "name": { "type": "string", "minLength": 1 },
-            "bucketName": { "type": "string" },
-            "generateBucketName": { "type": "string" },
-            "storageClassName": { "type": "string", "minLength": 1 }
-          }
-        }
-      }
-    },
     "s3": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["endpointUrl", "bucket", "region", "secretName", "inputKey", "resultPrefix", "resultJsonKey", "resultIndexKey"],
+      "required": ["configMapName", "secretName", "inputKey", "resultPrefix", "resultJsonKey", "resultIndexKey"],
       "properties": {
-        "endpointUrl": { "type": "string", "minLength": 1 },
-        "bucket": { "type": "string", "minLength": 1 },
-        "region": { "type": "string", "minLength": 1 },
+        "configMapName": { "type": "string", "minLength": 1 },
         "secretName": { "type": "string", "minLength": 1 },
         "inputKey": { "type": "string", "minLength": 1 },
         "resultPrefix": { "type": "string", "minLength": 1 },

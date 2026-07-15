@@ -3,18 +3,8 @@ fullnameOverride: ""
 
 releaseLabel: rgw-analysis-web
 
-objectStorage:
-  claim:
-    enabled: false
-    name: rgw-analysis-web-bucket
-    bucketName: ""
-    generateBucketName: ""
-    storageClassName: object-bucket
-
 s3:
-  endpointUrl: "https://s3.example.invalid"
-  bucket: "rgw-analysis-poc"
-  region: "us-east-1"
+  configMapName: "rgw-analysis-web-runtime"
   secretName: "rgw-analysis-web-s3"
   inputKey: "input/dataset.csv"
   resultPrefix: "results/rgw-analysis-web"

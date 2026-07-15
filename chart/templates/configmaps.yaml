@@ -15,12 +15,9 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "rgw-analysis-web.fullname" . }}-runtime
+  name: {{ include "rgw-analysis-web.fullname" . }}-nginx
   labels:
 {{ include "rgw-analysis-web.componentLabels" (dict "root" . "component" "result-web") | indent 4 }}
 data:
-  S3_ENDPOINT_URL: {{ .Values.s3.endpointUrl | quote }}
-  S3_BUCKET: {{ .Values.s3.bucket | quote }}
-  AWS_DEFAULT_REGION: {{ .Values.s3.region | quote }}
   nginx.conf: |
 {{ .Files.Get "files/nginx.conf" | indent 4 }}

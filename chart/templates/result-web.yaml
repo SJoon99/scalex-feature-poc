@@ -89,7 +89,7 @@ spec:
             defaultMode: 0555
         - name: nginx-config
           configMap:
-            name: {{ include "rgw-analysis-web.fullname" . }}-runtime
+            name: {{ include "rgw-analysis-web.fullname" . }}-nginx
         - name: html
           emptyDir: {}
         - name: nginx-cache

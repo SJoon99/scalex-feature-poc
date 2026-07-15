@@ -10,24 +10,16 @@ It creates:
   - an AWS CLI S3 sync sidecar that polls the result prefix into a shared nginx html directory;
   - an official nginx container serving the synced files.
 - `result-web` `Service`, base type `ClusterIP`.
-- ConfigMaps `rgw-analysis-web-scripts` and `rgw-analysis-web-runtime` for shell scripts and nginx config.
+- ConfigMaps `rgw-analysis-web-scripts` and `rgw-analysis-web-nginx` for shell scripts and nginx config.
 - ServiceAccount with token automount disabled.
-- Optional namespaced `ObjectBucketClaim` for an application-owned bucket.
 
-The chart intentionally does **not** contain member cluster names, Karmada `PropagationPolicy`, Karmada `OverridePolicy`, or credentials.
+The chart intentionally does **not** contain member cluster names, Karmada policy,
+ObjectBucketClaims, StorageClasses, runtime bindings, or credentials.
 
-## ObjectBucketClaim and required Secret
+## Required object-storage binding
 
-When `objectStorage.claim.enabled=true`, the chart declares an OBC in the Helm
-release namespace. The target cluster's Rook provisioner creates the bucket and
-its generated Secret/ConfigMap. The chart never renders access-key values.
-
-For same-cluster consumption, `s3.secretName` may reference the generated OBC
-Secret directly. A cross-cluster release must mirror that generated credential
-through a platform credential bridge or external Secret store before workloads
-in another member cluster can start.
-
-The configured runtime Secret must contain:
+The release platform must provide the configured Secret and ConfigMap before the
+workloads can start. The chart only references them.
 
 ```yaml
 apiVersion: v1
@@ -40,19 +32,24 @@ stringData:
   AWS_SECRET_ACCESS_KEY: replace-me
 ```
 
-The Secret name is configurable through `s3.secretName`.
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rgw-analysis-web-runtime
+data:
+  S3_ENDPOINT_URL: https://s3.example.invalid
+  S3_BUCKET: generated-bucket-name
+  AWS_DEFAULT_REGION: us-east-1
+```
+
+Their names are configured through `s3.secretName` and `s3.configMapName`.
 
 ## Important values
 
 | Value | Purpose |
 |---|---|
-| `objectStorage.claim.enabled` | Render a feature-owned namespaced OBC. |
-| `objectStorage.claim.name` | OBC name; Rook uses it for generated Secret/ConfigMap names. |
-| `objectStorage.claim.bucketName` | Explicit bucket name when the release requires a stable cross-cluster contract. |
-| `objectStorage.claim.generateBucketName` | Prefix for a generated bucket name; mutually exclusive with `bucketName`. |
-| `objectStorage.claim.storageClassName` | Infra-provided object bucket StorageClass. |
-| `s3.endpointUrl` | S3/RGW endpoint URL used with `aws --endpoint-url`. |
-| `s3.bucket` | Bucket containing input and output objects. |
+| `s3.configMapName` | Existing normalized ConfigMap containing endpoint, bucket and region. |
 | `s3.secretName` | Existing Secret consumed by Jobs and sync sidecar. |
 | `s3.inputKey` | Deterministic CSV input object key. |
 | `s3.resultPrefix` | Prefix synced into nginx html dir. |
@@ -96,8 +93,11 @@ When rendered with Helm release name `rgw-analysis-web`, resource names are:
 | Kind | Name |
 |---|---|
 | ConfigMap | `rgw-analysis-web-scripts` |
-| ConfigMap | `rgw-analysis-web-runtime` |
+| ConfigMap | `rgw-analysis-web-nginx` |
 | Job | `rgw-analysis-web-dataset-seeder` |
 | Job | `rgw-analysis-web-analyzer` |
 | Deployment | `rgw-analysis-web-result-web` |
 | Service | `rgw-analysis-web-result-web` |
+
+`rgw-analysis-web-runtime` is deliberately absent from rendered resources; it is
+owned by the Federation runtime binding step.

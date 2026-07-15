@@ -50,17 +50,17 @@ scalex.io/component: {{ .component | quote }}
 - name: S3_ENDPOINT_URL
   valueFrom:
     configMapKeyRef:
-      name: {{ include "rgw-analysis-web.fullname" . }}-runtime
+      name: {{ .Values.s3.configMapName | quote }}
       key: S3_ENDPOINT_URL
 - name: S3_BUCKET
   valueFrom:
     configMapKeyRef:
-      name: {{ include "rgw-analysis-web.fullname" . }}-runtime
+      name: {{ .Values.s3.configMapName | quote }}
       key: S3_BUCKET
 - name: AWS_DEFAULT_REGION
   valueFrom:
     configMapKeyRef:
-      name: {{ include "rgw-analysis-web.fullname" . }}-runtime
+      name: {{ .Values.s3.configMapName | quote }}
       key: AWS_DEFAULT_REGION
 - name: AWS_EC2_METADATA_DISABLED
   value: "true"
