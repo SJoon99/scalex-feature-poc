@@ -14,7 +14,7 @@ ScaleX User/Dev Layer에서 사용할 feature를 개발하고 배포 artifact로
 2. `analyzer` Kubernetes Job — input object를 기다린 뒤 row count/sum/average를 계산하고 `result.json`, `index.html`을 업로드한다.
 3. `result-web` Deployment — AWS CLI sync sidecar가 result prefix를 nginx html dir로 polling sync하고 nginx가 정적 결과를 제공한다.
 4. `result-web` Service — base type은 `ClusterIP`; Federation override가 필요한 cluster에서만 LoadBalancer로 바꾼다.
-5. 기존 runtime Secret/ConfigMap 참조 — Bucket 연결 정보는 Federation이 준비한다.
+5. 기존 runtime Secret/ConfigMap 참조 — B Infra OBC output을 Federation binding이 정규화한다.
 
 공식 public runtime image만 사용한다.
 
@@ -43,9 +43,9 @@ member cluster별 endpoint를 안전하게 override할 수 있다.
 
 ## Object storage contract
 
-Feature Helm은 Bucket을 만들지 않는다. `ObjectBucketClaim`, StorageClass 선택,
-Bucket lifecycle과 Karmada placement는 `scalex-federation` release가 소유한다.
-Chart는 정규화된 두 리소스의 **이름만** 입력받는다.
+Feature Helm은 Bucket을 만들지 않는다. `ObjectBucketClaim`, StorageClass 선택과
+Bucket lifecycle은 대상 `*-k8s` Infra가 소유하고, Federation은 non-secret binding과
+workload placement를 소유한다. Chart는 정규화된 두 리소스의 **이름만** 입력받는다.
 
 ```text
 Secret/<s3.secretName>

@@ -99,5 +99,6 @@ When rendered with Helm release name `rgw-analysis-web`, resource names are:
 | Deployment | `rgw-analysis-web-result-web` |
 | Service | `rgw-analysis-web-result-web` |
 
-`rgw-analysis-web-runtime` is deliberately absent from rendered resources; it is
-owned by the Federation runtime binding step.
+`rgw-analysis-web-runtime` is deliberately absent from rendered resources. Its
+source OBC belongs to site-b Infra, while the Federation runtime binding step
+creates the normalized runtime object.
